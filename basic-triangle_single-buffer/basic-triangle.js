@@ -17,10 +17,6 @@ function main() {
         console.log("error with webgl context");
         return;
     }
-    // set clear color
-    gl.clearColor(0.5, 0.5, 0.5, 1.0);
-    // clear color
-    gl.clear(gl.COLOR_BUFFER_BIT);
 
     const vsSource = `
         attribute vec4 aVertexPosition;

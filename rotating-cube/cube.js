@@ -1,6 +1,6 @@
 const mat4 = glMatrix.mat4;
 
-var squareRotation = 2.0;
+var cubeRotation = 0.0;
 
 function main() {
     // get canvas
@@ -13,10 +13,6 @@ function main() {
         console.log("error with webgl context");
         return;
     }
-    // set clear color
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    // clear color
-    gl.clear(gl.COLOR_BUFFER_BIT);
 
     const vsSource = `
         attribute vec4 aVertexPosition;
@@ -64,7 +60,7 @@ function main() {
         const deltaTime = now - then;
         then = now;
     
-        // drawScene(gl, programInfo, buffers, deltaTime);
+        drawScene(gl, programInfo, buffers, deltaTime);
     
         requestAnimationFrame(render);
     }
@@ -126,10 +122,10 @@ function initBuffers(gl) {
         [1.0, 0.0, 1.0, 1.0],
     ];
 
-    const colors = [];
+    var colors = [];
 
-    faceColors.forEach( elem => {
-        colors.concat(elem, elem, elem, elem);
+    faceColors.forEach( (elem) => {
+        colors = colors.concat(elem, elem, elem, elem);
     });
 
     // send positions to buffer
@@ -157,7 +153,7 @@ function initBuffers(gl) {
         position: positionBuffer,
         color: colorBuffer,
         indices: indexBuffer,
-    }
+    };
 }
 
 function drawScene(gl, programInfo, buffers, deltaTime) {
@@ -195,8 +191,12 @@ function drawScene(gl, programInfo, buffers, deltaTime) {
 
     mat4.rotate(modelViewMatrix,
                 modelViewMatrix,
-                squareRotation,
+                cubeRotation,
                 [0, 0, 1]);
+    mat4.rotate(modelViewMatrix,
+                modelViewMatrix,
+                cubeRotation * .7,
+                [0, 1, 0]);
     
     {
         const numComponents = 3;    // how many values per iteration. this is a 2d object so 2 coords
@@ -232,6 +232,7 @@ function drawScene(gl, programInfo, buffers, deltaTime) {
                                 offset);
         gl.enableVertexAttribArray(programInfo.attribLocations.vertexColor);
     }
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
 
     gl.useProgram(programInfo.program);
     gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix,
@@ -241,15 +242,14 @@ function drawScene(gl, programInfo, buffers, deltaTime) {
                         false,
                         modelViewMatrix);
 
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
 
-    {
-        const offset = 0;
-        const vertexCount = 36;
-        const type = gl.UNSIGNED_SHORT;
-        gl.drawElements(gl.TRIANGLE, offset, type, vertexCount);
-    }
-    // squareRotation += deltaTime;
+  {
+    const vertexCount = 36;
+    const type = gl.UNSIGNED_SHORT;
+    const offset = 0;
+    gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
+  }
+    cubeRotation += deltaTime;
 }
 
 // setting up the shaders

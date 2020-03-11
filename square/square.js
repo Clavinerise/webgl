@@ -1,3 +1,8 @@
+/* 
+ * Basic roating Square
+ */
+
+
 const mat4 = glMatrix.mat4;
 
 var squareRotation = 2.0;
@@ -58,13 +63,14 @@ function main() {
     const buffers = initBuffers(gl);
     var then = 0;
 
-    // drawScene(gl, programInfo, buffers);
+    // uses the amount of time that's passed since the last time we updated the 
+    // value of squareRotation to determine how far to rotate the square.
     function render(now) {
-        now *= 0.001;
+        now *= 0.001; // convert to seconds
         const deltaTime = now - then;
         then = now;
     
-        // drawScene(gl, programInfo, buffers, deltaTime);
+        drawScene(gl, programInfo, buffers, deltaTime);
     
         requestAnimationFrame(render);
     }
@@ -80,57 +86,18 @@ function initBuffers(gl) {
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
     const positions = [
-        // Front face
+        -1.0, 1.0,  1.0,
         -1.0, -1.0,  1.0,
-         1.0, -1.0,  1.0,
-         1.0,  1.0,  1.0,
-        -1.0,  1.0,  1.0,
-        
-        // Back face
-        -1.0, -1.0, -1.0,
-        -1.0,  1.0, -1.0,
-         1.0,  1.0, -1.0,
-         1.0, -1.0, -1.0,
-        
-        // Top face
-        -1.0,  1.0, -1.0,
-        -1.0,  1.0,  1.0,
-         1.0,  1.0,  1.0,
-         1.0,  1.0, -1.0,
-        
-        // Bottom face
-        -1.0, -1.0, -1.0,
-         1.0, -1.0, -1.0,
-         1.0, -1.0,  1.0,
-        -1.0, -1.0,  1.0,
-        
-        // Right face
-         1.0, -1.0, -1.0,
-         1.0,  1.0, -1.0,
-         1.0,  1.0,  1.0,
-         1.0, -1.0,  1.0,
-        
-        // Left face
-        -1.0, -1.0, -1.0,
-        -1.0, -1.0,  1.0,
-        -1.0,  1.0,  1.0,
-        -1.0,  1.0, -1.0,
+        1.0,  1.0,  1.0,
+        1.0,  -1.0,  1.0,
     ];
 
-    const faceColors = [
+    const colors = [
         1.0, 0.0, 0.0, 1.0,
         0.0, 1.0, 0.0, 1.0,
-        1.0, 0.0, 1.0, 1.0,
-        1.0, 1.0, 1.0, 1.0,
-        0.0, 1.0, 1.0, 1.0,
+        0.0, 0.0, 1.0, 1.0,
         1.0, 0.0, 1.0, 1.0,
     ];
-
-    const colors = [];
-
-    faceColors.forEach( elem => {
-        colors.concat(elem, elem, elem, elem);
-    });
 
     // send positions to buffer
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
@@ -175,12 +142,12 @@ function drawScene(gl, programInfo, buffers, deltaTime) {
 
     mat4.translate(modelViewMatrix,     // destination matrix
                     modelViewMatrix,     // matrix to translate
-                    [-0.0, 0.0, -6.0]);
+                    [-0.0, 0.0, -5.0]);
 
     mat4.rotate(modelViewMatrix,
                 modelViewMatrix,
                 squareRotation,
-                [0, 0, 1]);
+                [0, 0, 1]); // axis
     
     {
         const numComponents = 3;    // how many values per iteration. this is a 2d object so 2 coords

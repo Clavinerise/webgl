@@ -16,23 +16,23 @@ function main() {
 
     const vsSource = `
         attribute vec4 aVertexPosition;
-        attribute vec4 aVertexColor;
+        attribute vec2 aTextureCoords;
 
         uniform mat4 uModelViewMatrix;
         uniform mat4 uProjectionMatrix;
 
-        varying lowp vec4 vColor;
+        varying highp vec2 vTextureCoords;
         void main() {
             gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
-            vColor = aVertexColor;
+            vTextureCoords = aTextureCoords;
         }
     `;
 
     const fsSource = `
-        varying lowp vec4 vColor;
-
+        varying highp vec2 vTextureCoords;
+        uniform sampler2D uSampler;
         void main() {
-            gl_FragColor = vColor;
+            gl_FragColor = texture2D(uSampler, vTextureCoords);
         }
     `;
 
@@ -43,15 +43,18 @@ function main() {
         program: shaderProgram,
         attribLocations: {
             vertexPos: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
-            vertexColor: gl.getAttribLocation(shaderProgram, 'aVertexColor')
+            textureCoords: gl.getAttribLocation(shaderProgram, 'aTextureCoords')
         },
         uniformLocations: {
             modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
             projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
+            uSampler: gl.getUniformLocation(shaderProgram, 'uSampler')
         }
     };
 
     const buffers = initBuffers(gl);
+    const texture = loadTexture(gl, "crate.jpg");
+
     var then = 0;
 
     // drawScene(gl, programInfo, buffers);
@@ -60,7 +63,7 @@ function main() {
         const deltaTime = now - then;
         then = now;
     
-        drawScene(gl, programInfo, buffers, deltaTime);
+        drawScene(gl, programInfo, buffers, texture, deltaTime);
     
         requestAnimationFrame(render);
     }
@@ -113,28 +116,6 @@ function initBuffers(gl) {
         -1.0,  1.0, -1.0,
     ];
 
-    const faceColors = [
-        [1.0, 0.0, 0.0, 1.0],
-        [0.0, 1.0, 0.0, 1.0],
-        [1.0, 0.0, 1.0, 1.0],
-        [1.0, 1.0, 1.0, 1.0],
-        [0.0, 1.0, 1.0, 1.0],
-        [1.0, 0.0, 1.0, 1.0],
-    ];
-
-    var colors = [];
-
-    faceColors.forEach( (elem) => {
-        colors = colors.concat(elem, elem, elem, elem);
-    });
-
-    // send positions to buffer
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-
-    const colorBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-
     // ccw triangles
     const indices = [
         0, 1, 2,    0, 2, 3,        // front
@@ -149,14 +130,52 @@ function initBuffers(gl) {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
 
+    // texture coordinates
+    const textureCoordinates = [
+        // Front
+        0.0,  0.0,
+        1.0,  0.0,
+        1.0,  1.0,
+        0.0,  1.0,
+        // Back
+        0.0,  0.0,
+        1.0,  0.0,
+        1.0,  1.0,
+        0.0,  1.0,
+        // Top
+        0.0,  0.0,
+        1.0,  0.0,
+        1.0,  1.0,
+        0.0,  1.0,
+        // Bottom
+        0.0,  0.0,
+        1.0,  0.0,
+        1.0,  1.0,
+        0.0,  1.0,
+        // Right
+        0.0,  0.0,
+        1.0,  0.0,
+        1.0,  1.0,
+        0.0,  1.0,
+        // Left
+        0.0,  0.0,
+        1.0,  0.0,
+        1.0,  1.0,
+        0.0,  1.0,
+      ];
+
+    const textureCoordBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordinates), gl.STATIC_DRAW);
+
     return {
         position: positionBuffer,
-        color: colorBuffer,
         indices: indexBuffer,
+        textureCoord: textureCoordBuffer
     };
 }
 
-function drawScene(gl, programInfo, buffers, deltaTime) {
+function drawScene(gl, programInfo, buffers, texture, deltaTime) {
     // clear color
     gl.clearColor(0.0, 0.0, 0.0, 1.0);  // clear to black
     gl.clearDepth(1.0);                 // clear everything
@@ -216,21 +235,21 @@ function drawScene(gl, programInfo, buffers, deltaTime) {
         gl.enableVertexAttribArray(programInfo.attribLocations.vertexPos);
     }
     {
-        const numComponents = 4;    // how many values per iteration. this is a 2d object so 2 coords
+        const numComponents = 2;    // how many values per iteration
         const type = gl.FLOAT;      // the data in the buffer
         const normalize = false;    // don't normalize
         const stride = 0;           // how many bytes to get one value to the next
                                     // 0 = use type and numComponents above
         const offset = 0;           // how many bytes inside buffer to start from
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color);
-        gl.vertexAttribPointer(programInfo.attribLocations.vertexColor,
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.texture);
+        gl.vertexAttribPointer(programInfo.attribLocations.textureCoords,
                                 numComponents,
                                 type,
                                 normalize,
                                 stride,
                                 offset);
-        gl.enableVertexAttribArray(programInfo.attribLocations.vertexColor);
+        gl.enableVertexAttribArray(programInfo.attribLocations.textureCoords);
     }
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
 
@@ -241,6 +260,13 @@ function drawScene(gl, programInfo, buffers, deltaTime) {
     gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix,
                         false,
                         modelViewMatrix);
+                        
+    // tell webGL that we want to affect texture unit 0
+    gl.activeTexture(gl.TEXTURE0);
+    // Bind the texture to texture unit 0
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    // Tell the shader we bound the texture to texture unit 0
+    gl.uniform1i(programInfo.uniformLocations.uSampler, 0);
 
 
   {
@@ -297,14 +323,31 @@ function loadTexture(gl, url) {
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
-    const level = 0;
-    const internalFormat = gl.RGBA;
-    const width = 1;
-    const height = 1;
-    const border = 0;
-    const srcFormat = gl.RGBA;
-    const srcType = gl.UNSIGNED_BYTE;
-    const pixel = new Uint8Array([])
+    const level = 0;                // GLint. level of detail. level 0 is the base image level and level n is the nth mipmap reduction level
+    const internalFormat = gl.RGBA; // GLenum specififying the color components in the texture
+    const width = 1;                // GLsizei specifying the width of the texture
+    const height = 1;               // GLsizei specifying the height of the texture
+    const border = 0;               // GLint specifying the width of the border. Must be 0.
+    const srcFormat = gl.RGBA;      // Glenum specifying the format of the texel data
+    const srcType = gl.UNSIGNED_BYTE;   // GLenum specifying the data type of the texel data
+    const pixel = new Uint8Array([0, 0, 255, 255]); // pixel source
+
+    // gives image temporary color while the image loads from the internet
+    gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border, srcFormat, srcType, pixel);
+
+    const image = new Image();
+    image.onload = () => {
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, image);
+
+        // gl.generateMipMap(gl.TEXTURE_2D);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_MIN_FILTER, gl.CLAMP_TO_EDGE);
+    };
+
+    image.src = url;
+
 }
 
 

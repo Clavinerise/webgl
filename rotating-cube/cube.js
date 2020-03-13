@@ -116,7 +116,7 @@ function initBuffers(gl) {
     const faceColors = [
         [1.0, 0.0, 0.0, 1.0],
         [0.0, 1.0, 0.0, 1.0],
-        [1.0, 0.0, 1.0, 1.0],
+        [0.0, 0.0, 1.0, 1.0],
         [1.0, 1.0, 1.0, 1.0],
         [0.0, 1.0, 1.0, 1.0],
         [1.0, 0.0, 1.0, 1.0],
@@ -192,11 +192,11 @@ function drawScene(gl, programInfo, buffers, deltaTime) {
     mat4.rotate(modelViewMatrix,
                 modelViewMatrix,
                 cubeRotation,
-                [0, 0, 1]);
+                [0, 1, 0]);
     mat4.rotate(modelViewMatrix,
                 modelViewMatrix,
                 cubeRotation * .7,
-                [0, 1, 0]);
+                [1, 1, 0]);
     
     {
         const numComponents = 3;    // how many values per iteration. this is a 2d object so 2 coords

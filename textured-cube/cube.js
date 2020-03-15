@@ -115,6 +115,7 @@ function initBuffers(gl) {
         -1.0,  1.0,  1.0,
         -1.0,  1.0, -1.0,
     ];
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
     // ccw triangles
     const indices = [
@@ -242,7 +243,7 @@ function drawScene(gl, programInfo, buffers, texture, deltaTime) {
                                     // 0 = use type and numComponents above
         const offset = 0;           // how many bytes inside buffer to start from
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.texture);
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.textureCoord);
         gl.vertexAttribPointer(programInfo.attribLocations.textureCoords,
                                 numComponents,
                                 type,
@@ -336,20 +337,27 @@ function loadTexture(gl, url) {
     gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border, srcFormat, srcType, pixel);
 
     const image = new Image();
+    // image.crossOrigin = "";
     image.onload = () => {
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, image);
 
-        // gl.generateMipMap(gl.TEXTURE_2D);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_MIN_FILTER, gl.CLAMP_TO_EDGE);
+        if(isPowerOf2(image.width) && isPowerOf2(image.height)) {
+            gl.generateMipmap(gl.TEXTURE_2D);
+        } else {
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        }
     };
 
     image.src = url;
-
+    return texture;
 }
 
+function isPowerOf2(value) {
+    return (value & (value-1)) == 0;
+}
 
 // calling the main on load
 window.onload = main;

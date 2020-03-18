@@ -95,7 +95,7 @@ function initBuffers(gl) {
 
 function drawScene(gl, programInfo, buffers, deltaTime) {
     // clear color
-    gl.clearColor(0.9, 0.9, 0.9, 1.0);  // clear to black
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);  // clear to black
     gl.clearDepth(1.0);                 // clear everything
     gl.enable(gl.DEPTH_TEST);           // enable depth testing
     gl.depthFunc(gl.LEQUAL);            // near things obscure far things
